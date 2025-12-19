@@ -1,10 +1,19 @@
-import { Avatar, Button, Chip } from "@heroui/react";
+import { Avatar, Button } from "@heroui/react";
 import React from "react";
 import { useParams } from "react-router-dom";
-import { PositionIcon } from "../../assets/PositionIcon";
+import {
+  appleTargetLocation,
+  fetchBattleship,
+  type Battle,
+  type Company,
+  type Location,
+} from "../../api/gameApi";
 import { AimIcon } from "../../assets/AimIcon";
+import { PositionIcon } from "../../assets/PositionIcon";
+import RemainingTime from "../../components/shared/RemainingTime";
+import { cn } from "../../utils/classNames";
 
-const getTitleByStep = (step: number) => {
+const getTitleByStep = (step: number, status?: "WIN" | "LOSE" | "DRAW") => {
   switch (step) {
     case 1:
       return "Поставь объект на поле!";
@@ -12,68 +21,85 @@ const getTitleByStep = (step: number) => {
       return "Сделай ход!";
     case 3:
       return "Ждем остальных игроков!";
+    case 4:
+      return status === "WIN"
+        ? "Вы победили!"
+        : status === "LOSE"
+        ? "Вы проиграли!"
+        : "Ничья!";
     default:
       return "Ждем остальных игроков!";
   }
 };
 
-const getIconByStep = (step: number) => {
+const getIconByStep = (
+  step: number,
+  x?: number,
+  y?: number,
+  targetLocations?: Location[],
+  targetAims?: Location[],
+  locations?: Location[],
+  aims?: Location[]
+) => {
   switch (step) {
     case 1:
       return <PositionIcon />;
     case 2:
       return <AimIcon />;
+    case 3:
+    case 4:
+      if (targetAims?.find((aim) => aim.x === x && aim.y === y)) {
+        return <AimIcon color="#FF383C" />;
+      }
+
+      if (
+        targetLocations?.find(
+          (location) => location.x === x && location.y === y
+        )
+      ) {
+        return <PositionIcon color="#FF383C" />;
+      }
+
+      if (aims?.find((aim) => aim.x === x && aim.y === y)) {
+        return <AimIcon color="#17C964" />;
+      }
+
+      if (locations?.find((location) => location.x === x && location.y === y)) {
+        return <PositionIcon color="#17C964" />;
+      }
+
+      return;
     default:
-      return <AimIcon />;
+      return;
   }
 };
 
-interface Company {
-  title: string;
-  aims: { x: number; y: number }[];
-  locations: { x: number; y: number }[];
-}
+const getBackgroundSquare = (
+  x: number,
+  y: number,
+  company: Company,
+  targetCompany: Company
+) => {
+  const companyFoundLocation = company.aims.find(
+    (aim) => aim.x === x && aim.y === y
+  );
+  const targetCompanyFoundLocation = targetCompany.aims.find(
+    (aim) => aim.x === x && aim.y === y
+  );
 
-interface Battle {
-  targetCompany: Company;
-  company: Company;
-}
+  if (companyFoundLocation && !targetCompanyFoundLocation) {
+    return "bg-[#17C964]";
+  }
 
-const mockedBattle = {
-  targetCompany: {
-    title: "LinkApp Technologies",
-    aims: [
-      { x: 3, y: 2 },
-      { x: 5, y: 5 },
-      { x: 3, y: 1 },
-      { x: 8, y: 8 },
-      { x: 3, y: 6 },
-    ],
-    locations: [
-      { x: 3, y: 8 },
-      { x: 4, y: 3 },
-      { x: 8, y: 6 },
-      { x: 6, y: 1 },
-      { x: 5, y: 6 },
-    ],
-  },
-  company: {
-    title: "NeroTeam",
-    aims: [
-      { x: 5, y: 3 },
-      { x: 6, y: 2 },
-      { x: 2, y: 4 },
-      { x: 1, y: 7 },
-      { x: 5, y: 4 },
-    ],
-    locations: [
-      { x: 4, y: 6 },
-      { x: 4, y: 5 },
-      { x: 6, y: 4 },
-      { x: 7, y: 6 },
-      { x: 3, y: 2 },
-    ],
-  },
+  if (companyFoundLocation && targetCompanyFoundLocation) {
+    return "bg-[#FDFD8A]";
+  }
+
+  if (targetCompanyFoundLocation && !companyFoundLocation) {
+    return "bg-[#FF383C]";
+  }
+
+  return "bg-[#D9D9D9]";
 };
 
 const OccupationPage: React.FC = () => {
@@ -84,7 +110,20 @@ const OccupationPage: React.FC = () => {
   } | null>(null);
   const [battleData, setBattleData] = React.useState<Battle | null>(null);
 
-  console.log(battleData);
+  const id = useParams().id;
+
+  React.useEffect(() => {
+    const fetchBattleData = async () => {
+      if (!id) return;
+
+      const data = await fetchBattleship(id);
+
+      setBattleData(data);
+      setStep(data.step);
+    };
+
+    fetchBattleData();
+  }, []);
 
   const onSelectPosition = React.useCallback(
     (x: number, y: number) => {
@@ -94,34 +133,39 @@ const OccupationPage: React.FC = () => {
     [step]
   );
 
-  const onApplyPosition = React.useCallback(() => {
-    setStep((prev) => (prev < 3 ? prev + 1 : prev));
+  const onApplyPosition = React.useCallback(async () => {
+    if (!selectedPosition) return;
 
-    setSelectedPosition(null);
+    const data = await appleTargetLocation(
+      selectedPosition.x,
+      selectedPosition.y
+    );
 
-    if (step > 2) {
-      setInterval(() => {
-        setBattleData(mockedBattle);
-      }, 3);
+    if (data.success) {
+      setStep((prev) => (prev < 3 ? prev + 1 : prev));
+
+      setSelectedPosition(null);
     }
-  }, [step]);
+  }, [step, selectedPosition?.x, selectedPosition?.y]);
 
-  const id = useParams().id;
-
-  if (!id) return <div>Неправильная ссылка</div>;
+  if (!id || !battleData) return <div>Неправильная ссылка</div>;
 
   return (
     <div className="space-y-3 max-w-[400px] mx-auto">
       <header className="space-y-3">
         <div className="flex gap-3 text-2xl items-center text-[#F31260]">
-          <Avatar radius="lg" color="danger" /> Company name
+          <Avatar radius="lg" color="danger" /> {battleData.targetCompany.title}
         </div>
+        {step < 4 && (
+          <RemainingTime
+            duration={battleData.duration}
+            createdAt={battleData.createdAt}
+          />
+        )}
 
-        <div>
-          <Chip color="danger">Оставшееся время: 2:32</Chip>
+        <div className="text-center text-2xl">
+          {getTitleByStep(step, battleData.status)}
         </div>
-
-        <div className="text-center text-2xl">{getTitleByStep(step)}</div>
       </header>
 
       <main className="space-y-1">
@@ -132,20 +176,42 @@ const OccupationPage: React.FC = () => {
                 <button
                   disabled={step > 2}
                   onClick={() => onSelectPosition(x, y)}
-                  className="rounded-sm disabled:opacity-80 bg-[#D9D9D9] flex-1 aspect-square"
+                  className={cn(
+                    getBackgroundSquare(
+                      x,
+                      y,
+                      battleData.company,
+                      battleData.targetCompany
+                    ),
+                    "rounded-sm disabled:opacity-80  flex-1 aspect-square"
+                  )}
                   key={x}
                 >
-                  {selectedPosition &&
-                    selectedPosition.x === x &&
-                    selectedPosition.y === y &&
-                    getIconByStep(step)}
+                  {step < 3
+                    ? selectedPosition &&
+                      selectedPosition.x === x &&
+                      selectedPosition.y === y &&
+                      getIconByStep(step)
+                    : getIconByStep(
+                        step,
+                        x,
+                        y,
+                        battleData.targetCompany.locations,
+                        battleData.targetCompany.aims,
+                        battleData.company.locations,
+                        battleData.company.aims
+                      )}
                 </button>
               );
             })}
           </div>
         ))}
         {step < 3 && (
-          <Button className="w-full" onPress={onApplyPosition}>
+          <Button
+            disabled={!selectedPosition}
+            className="w-full"
+            onPress={onApplyPosition}
+          >
             Применить ход
           </Button>
         )}
