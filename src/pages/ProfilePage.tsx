@@ -1,31 +1,18 @@
 import { Avatar, Input, Spinner } from "@heroui/react";
 import React from "react";
-import { type Profile } from "../api/profileApi";
-
-const mockedProfile = {
-  id: 123123123123,
-  fullName: "supalonely",
-  cash: 123123123,
-  euro: 123123123,
-  reputation: 15,
-  btc: 152,
-  company: "LinkApp Technologies",
-  createdAt: "2025-12-16T00:00:00.000Z",
-};
+import { fetchProfile, type Profile } from "../api/profileApi";
 
 const ProfilePage: React.FC = () => {
   const [profile, setProfile] = React.useState<Profile | null>(null);
 
   React.useEffect(() => {
-    // const fetchProfileData = async () => {
-    //   const data = await fetchProfile();
+    const fetchProfileData = async () => {
+      const data = await fetchProfile();
 
-    //   setProfile(data);
-    // };
+      setProfile(data);
+    };
 
-    // fetchProfileData();
-
-    setProfile(mockedProfile);
+    fetchProfileData();
   }, []);
 
   if (!profile) return <Spinner />;
@@ -33,7 +20,7 @@ const ProfilePage: React.FC = () => {
     <div className="space-y-5 w-full block">
       <div className="flex flex-col items-center gap-1">
         <Avatar size="lg" radius="md" />
-        <div className="text-xl">supalonely</div>
+        <div className="text-xl">{profile.fullName}</div>
       </div>
 
       <div className="space-y-3 w-full">

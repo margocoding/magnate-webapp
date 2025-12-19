@@ -1,6 +1,6 @@
-export const AimIcon = () => (
+export const AimIcon = ({ color }: { color?: string }) => (
   <svg
-    fill="#000000"
+    fill={color || "#00000"}
     width="40"
     height="40"
     viewBox="0 0 1024 1024"
