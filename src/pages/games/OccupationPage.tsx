@@ -1,17 +1,17 @@
 import { Avatar, Button } from "@heroui/react";
 import React from "react";
 import { useParams } from "react-router-dom";
-import {
-  appleTargetLocation,
-  fetchBattleship,
-  type Battle,
-  type Company,
-  type Location,
-} from "../../api/gameApi";
+import { appleTargetLocation } from "../../api/gameApi";
 import { AimIcon } from "../../assets/AimIcon";
+import { BoomIcon } from "../../assets/BoomIcon";
+import { CloseIcon } from "../../assets/Close";
 import { PositionIcon } from "../../assets/PositionIcon";
+import Loading from "../../components/shared/Loading";
 import RemainingTime from "../../components/shared/RemainingTime";
+import MultipleIcon from "../../components/ui/MultipleIcon";
+import type { Aim, Company, Position } from "../../types/battle.types";
 import { cn } from "../../utils/classNames";
+import { useFetchBattleData } from "../../utils/hooks/fetchBattleData";
 
 const getTitleByStep = (step: number, status?: "WIN" | "LOSE" | "DRAW") => {
   switch (step) {
@@ -36,10 +36,10 @@ const getIconByStep = (
   step: number,
   x?: number,
   y?: number,
-  targetLocations?: Location[],
-  targetAims?: Location[],
-  locations?: Location[],
-  aims?: Location[]
+  targetLocations?: Position[],
+  targetAims?: Aim[],
+  locations?: Position[],
+  aims?: Aim[]
 ) => {
   switch (step) {
     case 1:
@@ -48,23 +48,47 @@ const getIconByStep = (
       return <AimIcon />;
     case 3:
     case 4:
-      if (targetAims?.find((aim) => aim.x === x && aim.y === y)) {
-        return <AimIcon color="#FF383C" />;
+      const companyLocation = locations?.find(
+        (location) => location.x === x && location.y === y
+      );
+      const targetCompanyLocation = targetLocations?.find(
+        (location) => location.x === x && location.y === y
+      );
+
+      const companyAim = aims?.find((aim) => aim.x === x && aim.y === y);
+      const targetCompanyAim = targetAims?.find(
+        (aim) => aim.x === x && aim.y === y
+      );
+
+      if (companyAim?.isTarget || targetCompanyAim?.isTarget)
+        return <BoomIcon />;
+
+      if (companyLocation?.isDefeated) {
+        return (
+          <MultipleIcon
+            second={<CloseIcon color="#000" />}
+            first={<PositionIcon color="#17C964" />}
+          />
+        );
+      }
+      if (targetCompanyLocation?.isDefeated) {
+        return (
+          <MultipleIcon
+            second={<CloseIcon color="#000" />}
+            first={<PositionIcon color="#FF383C" />}
+          />
+        );
       }
 
-      if (
-        targetLocations?.find(
-          (location) => location.x === x && location.y === y
-        )
-      ) {
+      if (companyLocation && companyAim) {
+        return <PositionIcon color="#17C964" />;
+      }
+
+      if (targetCompanyLocation) {
         return <PositionIcon color="#FF383C" />;
       }
 
-      if (aims?.find((aim) => aim.x === x && aim.y === y)) {
-        return <AimIcon color="#17C964" />;
-      }
-
-      if (locations?.find((location) => location.x === x && location.y === y)) {
+      if (companyLocation || (companyAim && companyLocation)) {
         return <PositionIcon color="#17C964" />;
       }
 
@@ -88,42 +112,29 @@ const getBackgroundSquare = (
   );
 
   if (companyFoundLocation && !targetCompanyFoundLocation) {
-    return "bg-[#17C964]";
+    return "bg-blue-400";
   }
 
   if (companyFoundLocation && targetCompanyFoundLocation) {
-    return "bg-[#FDFD8A]";
+    return "bg-blue-400";
   }
 
   if (targetCompanyFoundLocation && !companyFoundLocation) {
-    return "bg-[#FF383C]";
+    return "bg-blue-400";
   }
 
   return "bg-[#D9D9D9]";
 };
 
 const OccupationPage: React.FC = () => {
-  const [step, setStep] = React.useState<number>(1);
   const [selectedPosition, setSelectedPosition] = React.useState<{
     x: number;
     y: number;
   } | null>(null);
-  const [battleData, setBattleData] = React.useState<Battle | null>(null);
 
   const id = useParams().id;
 
-  React.useEffect(() => {
-    const fetchBattleData = async () => {
-      if (!id) return;
-
-      const data = await fetchBattleship(id);
-
-      setBattleData(data);
-      setStep(data.step);
-    };
-
-    fetchBattleData();
-  }, []);
+  const { battleData, loading, step, moveNextStep } = useFetchBattleData(id);
 
   const onSelectPosition = React.useCallback(
     (x: number, y: number) => {
@@ -142,11 +153,12 @@ const OccupationPage: React.FC = () => {
     );
 
     if (data.success) {
-      setStep((prev) => (prev < 3 ? prev + 1 : prev));
-
+      moveNextStep();
       setSelectedPosition(null);
     }
   }, [step, selectedPosition?.x, selectedPosition?.y]);
+
+  if (loading) return <Loading />;
 
   if (!id || !battleData) return <div>Неправильная ссылка</div>;
 

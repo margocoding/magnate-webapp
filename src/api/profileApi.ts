@@ -13,7 +13,7 @@ export interface Profile {
 
 export const fetchProfile = async (): Promise<Profile> => {
   try {
-    const { data } = await baseApi.get("/profile/get");
+    const { data } = await baseApi.post("/profile/get");
 
     return data;
   } catch (e) {
