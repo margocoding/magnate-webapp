@@ -1,10 +1,9 @@
 import React from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import SideBar from "./components/shared/SideBar";
-import ProfilePage from "./pages/ProfilePage";
 import GamesPage from "./pages/GamesPage";
+import ProfilePage from "./pages/ProfilePage";
 import OccupationPage from "./pages/games/OccupationPage";
-import { initAuth } from "./api/api";
 
 const App: React.FC = () => {
   return (
