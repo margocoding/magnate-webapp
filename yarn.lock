@@ -2837,6 +2837,11 @@
     "@rolldown/pluginutils" "1.0.0-beta.47"
     "@swc/core" "^1.13.5"
 
+"@vkontakte/vk-bridge@^2.15.10":
+  version "2.15.10"
+  resolved "https://registry.yarnpkg.com/@vkontakte/vk-bridge/-/vk-bridge-2.15.10.tgz#3d3606ffec5df146ed08f4699571a456e04be31a"
+  integrity sha512-FA2ZYFIs4nrqthOo1SOBph/GuDakFWaQQ895kOvn918LgdDMwAsIRvvID4dH01bPbTdECfGDrWRW5A1djEcuOA==
+
 acorn-jsx@^5.3.2:
   version "5.3.2"
   resolved "https://registry.yarnpkg.com/acorn-jsx/-/acorn-jsx-5.3.2.tgz#7ed5bb55908b3b2f1bc55c6af1653bada7f07937"

@@ -12,6 +12,7 @@
   "dependencies": {
     "@heroui/react": "^2.8.5",
     "@tailwindcss/vite": "^4.1.17",
+    "@vkontakte/vk-bridge": "^2.15.10",
     "axios": "^1.13.2",
     "framer-motion": "^12.23.26",
     "react": "^19.2.0",

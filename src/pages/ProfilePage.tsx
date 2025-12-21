@@ -1,13 +1,17 @@
-import { Avatar, Input, Spinner } from "@heroui/react";
+import { Avatar, Input } from "@heroui/react";
 import React from "react";
 import { fetchProfile, type Profile } from "../api/profileApi";
+import Loading from "../components/shared/Loading";
 
 const ProfilePage: React.FC = () => {
   const [profile, setProfile] = React.useState<Profile | null>(null);
+  const [loading, setLoading] = React.useState<boolean>(true);
 
   React.useEffect(() => {
     const fetchProfileData = async () => {
+      setLoading(true);
       const data = await fetchProfile();
+      setLoading(false);
 
       setProfile(data);
     };
@@ -15,7 +19,8 @@ const ProfilePage: React.FC = () => {
     fetchProfileData();
   }, []);
 
-  if (!profile) return <Spinner />;
+  if (loading || !profile) return <Loading />;
+
   return (
     <div className="space-y-5 w-full block">
       <div className="flex flex-col items-center gap-1">
