@@ -4,43 +4,27 @@ import { detectPlatform } from "../utils/detectPlatform";
 
 const platform = detectPlatform();
 
-console.log(platform);
-
-let authInitialized = false;
-let authInitializing = false;
-
 const initAuthOnce = async () => {
-  if (authInitialized || authInitializing) return;
+  if (platform === "vk") {
+    console.log("sending bridge");
+    await bridge.send("VKWebAppInit");
+    console.log("bridge sent");
+    const { access_token } = await bridge.send("VKWebAppGetAuthToken", {
+      app_id: Number(import.meta.env.VITE_PUBLIC_VK_APP_ID),
+      scope: "",
+    });
 
-  authInitializing = true;
+    console.log(access_token);
 
-  console.log("init auth once");
-  try {
-    if (platform === "vk") {
-      console.log("sending bridge");
-      await bridge.send("VKWebAppInit");
-      console.log("bridge sent");
-      const { access_token } = await bridge.send("VKWebAppGetAuthToken", {
-        app_id: Number(import.meta.env.VITE_PUBLIC_VK_APP_ID),
-        scope: "",
-      });
+    localStorage.setItem("vk-access-token", access_token);
+  }
 
-      console.log(access_token);
-
-      localStorage.setItem("vk-access-token", access_token);
+  if (platform === "telegram") {
+    const tg = window.Telegram?.WebApp;
+    if (tg) {
+      tg.ready();
+      localStorage.setItem("telegram-init-data", tg.initData);
     }
-
-    if (platform === "telegram") {
-      const tg = window.Telegram?.WebApp;
-      if (tg) {
-        tg.ready();
-        localStorage.setItem("telegram-init-data", tg.initData);
-      }
-    }
-
-    authInitialized = true;
-  } finally {
-    authInitializing = false;
   }
 };
 
@@ -49,11 +33,7 @@ export const baseApi = axios.create({
 });
 
 baseApi.interceptors.request.use(async (config) => {
-  // ❗ КРИТИЧЕСКИЙ ПРЕДОХРАНИТЕЛЬ
-  if (!authInitialized) {
-    await initAuthOnce();
-  }
-
+  await initAuthOnce();
   if (
     config.method === "post" ||
     config.method === "put" ||
