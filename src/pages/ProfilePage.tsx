@@ -24,7 +24,7 @@ const ProfilePage: React.FC = () => {
   return (
     <div className="space-y-5 w-full block">
       <div className="flex flex-col items-center gap-1">
-        <Avatar size="lg" radius="md" />
+        <Avatar src={profile.avatar || undefined} size="lg" radius="md" />
         <div className="text-xl">{profile.fullName}</div>
       </div>
 
@@ -51,7 +51,7 @@ const ProfilePage: React.FC = () => {
           className="w-full"
           disabled
           label="Наличные"
-          value={(+profile.cash).toLocaleString("ru-RU") + " ₽"}
+          value={(+profile.cash).toLocaleString("ru-RU") + " $"}
         />
         <Input
           variant="flat"
@@ -75,14 +75,14 @@ const ProfilePage: React.FC = () => {
           className="w-full"
           disabled
           label="Bitcoin"
-          value={profile.btc + " BTC"}
+          value={profile.btc + " ₿"}
         />
         <Input
           variant="flat"
           size="lg"
           className="w-full"
           disabled
-          label="Компания"
+          label="Клан"
           value={profile.company}
         />
         <Input

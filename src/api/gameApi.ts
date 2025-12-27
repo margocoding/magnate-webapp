@@ -5,7 +5,7 @@ export interface SuccessResponse {
   success: boolean;
 }
 
-export const fetchBattleship = async (id: string): Promise<Battle> => {
+export const fetchBattleship = async (id: string = ""): Promise<Battle> => {
   const { data } = await baseApi.post(`/game/battleship/get/${id}`);
 
   return data;
