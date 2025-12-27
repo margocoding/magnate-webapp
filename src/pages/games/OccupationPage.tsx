@@ -43,7 +43,7 @@ const getIconByStep = (
 ) => {
   switch (step) {
     case 1:
-      return <PositionIcon />;
+      return <PositionIcon color="#17C964" />;
     case 2:
       return <AimIcon />;
     case 3:
@@ -134,7 +134,8 @@ const OccupationPage: React.FC = () => {
 
   const id = useParams().id;
 
-  const { battleData, loading, step, moveNextStep } = useFetchBattleData(id);
+  const { battleData, loading, step, moveNextStep, remaining } =
+    useFetchBattleData(id);
 
   const onSelectPosition = React.useCallback(
     (x: number, y: number) => {
@@ -160,7 +161,7 @@ const OccupationPage: React.FC = () => {
 
   if (loading) return <Loading />;
 
-  if (!id || !battleData) return <div>Неправильная ссылка</div>;
+  if (!battleData) return <div>Неправильная ссылка</div>;
 
   return (
     <div className="space-y-3 max-w-[400px] mx-auto">
@@ -168,12 +169,7 @@ const OccupationPage: React.FC = () => {
         <div className="flex gap-3 text-2xl items-center text-[#F31260]">
           <Avatar radius="lg" color="danger" /> {battleData.targetCompany.title}
         </div>
-        {step < 4 && (
-          <RemainingTime
-            duration={battleData.duration}
-            createdAt={battleData.createdAt}
-          />
-        )}
+        {step < 4 && <RemainingTime remaining={remaining} />}
 
         <div className="text-center text-2xl">
           {getTitleByStep(step, battleData.status)}

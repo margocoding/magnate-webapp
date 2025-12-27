@@ -4,22 +4,14 @@ import { detectPlatform } from "../utils/detectPlatform";
 
 const platform = detectPlatform();
 
+bridge.send("VKWebAppInit");
+
 const initAuthOnce = async () => {
   if (platform === "vk") {
-    console.log("sending bridge");
-    await bridge.send("VKWebAppInit");
-    console.log("bridge sent");
-    const { access_token } = await bridge.send("VKWebAppGetAuthToken", {
-      app_id: Number(import.meta.env.VITE_PUBLIC_VK_APP_ID),
-      scope: "",
-    });
+    const launchParams = await bridge.send("VKWebAppGetLaunchParams");
 
-    console.log(access_token);
-
-    localStorage.setItem("vk-access-token", access_token);
-  }
-
-  if (platform === "telegram") {
+    localStorage.setItem("vk-data", JSON.stringify(launchParams));
+  } else if (platform === "telegram") {
     const tg = window.Telegram?.WebApp;
     if (tg) {
       tg.ready();
@@ -41,8 +33,8 @@ baseApi.interceptors.request.use(async (config) => {
   ) {
     config.data = {
       ...(config.data ?? {}),
-      vk_token: localStorage.getItem("vk-access-token"),
-      telegram_token: localStorage.getItem("telegram-init-data"),
+      vk_data: JSON.parse(localStorage.getItem("vk-data") || ""),
+      telegram_token: localStorage.getItem("telegram-init-data") || null,
     };
   }
 

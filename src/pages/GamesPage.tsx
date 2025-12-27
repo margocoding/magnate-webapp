@@ -8,7 +8,7 @@ const mockedGames = [
     id: 1,
     title: "Захват",
     image: "/images/sea_battle.jpg",
-    href: "/games/occupation/1",
+    href: "/games/occupation",
   },
 ];
 
