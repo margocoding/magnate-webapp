@@ -7,8 +7,6 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
     allowedHosts:
-      process.env.NODE_ENV === "development"
-        ? true
-        : ["haughtily-above-fieldfare.cloudpub.ru"],
+      process.env.NODE_ENV === "development" ? true : ["magnate.neroteam.org"],
   },
 });
